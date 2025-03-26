@@ -3,7 +3,7 @@ const int trigPin = 9;
 const int echoPin = 10;
 
 int count = 200;
-
+int zero = 0;
 void setup() {
   // Initialize serial communication
   Serial.begin(9600);
@@ -17,7 +17,7 @@ void setup() {
 
 void loop() {
   // Clear the trigPin
-  while (count > 0){
+  // while (count > 0){
       digitalWrite(trigPin, LOW);
       delayMicroseconds(2);
       
@@ -34,12 +34,15 @@ void loop() {
       float distance = duration * 0.034 / 2;
       
       // Print the distance to the Serial Monitor
-      Serial.print(distance);
-      Serial.println(" cm");
+      Serial.print(0); // To freeze the lower limit
+      Serial.print(" ");
+      Serial.print(300); // To freeze the upper limit
+      Serial.print(" ");
+      Serial.println(distance); // To send all three 'data' points to the plotter
       
       // Wait for a short period before the next measurement
-      delay(500);
+      delay(50);
       count--;
-  } 
+  // } 
 
 }
