@@ -14,6 +14,7 @@ void setup() {
   
   // Set the echoPin as an INPUT
   pinMode(echoPin, INPUT);
+  Serial.println("Attacker Algorithm Started");
 }
 
 void loop() {
