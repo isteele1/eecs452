@@ -1,3 +1,6 @@
+# Plotting function to run in the final implementation for STM32
+# Takes in a comma-separated string of "naive_data,processed_data,attack_type"
+
 import serial
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -35,6 +38,7 @@ def update(frame):
             ax.plot(timestamps, processed_data, label = "Processed Output")
             ax.set_ylim(0, 256)
             ax.set_xlim(-10, 0)
+            ax.title.set_text("Attack Type: " + list[2])
             ax.legend(loc="upper left")
             ax.set_xlabel("Time (seconds)")
             ax.set_ylabel("Distance (cm)")

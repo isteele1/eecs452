@@ -1,6 +1,9 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include "stm32f1xx_hal.h"   // or your series
+#include <cstdio>            // for sprintf
+#include <cstring>           // for strlen
 
 using std::cout;
 using std::endl;
@@ -9,14 +12,14 @@ using std::chrono::high_resolution_clock;
 using std::chrono::microseconds;
 using std::chrono::milliseconds;
 using std::chrono::duration_cast;
-// Selectively import needed std components
-using std::cout;
-using std::endl;
-using std::this_thread::sleep_for;
-using std::chrono::high_resolution_clock;
-using std::chrono::microseconds;
-using std::chrono::milliseconds;
-using std::chrono::duration_cast;
+
+extern UART_HandleTypeDef huart2;  // UART handle defined by STM32CubeMX
+
+void sendDistance(float naive_distance, float cleaned_distance) {
+    char buffer[64];
+    sprintf(buffer, "%.2f,%.2f\r\n", naive_distance, cleaned_distance);  // Format as CSV
+    HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+}
 
 // ---- GPIO placeholders (replace with real functions for your platform) ----
 void digitalWrite(int pin, bool value) {
@@ -69,13 +72,15 @@ int main() {
     const int trigPin = 9;
     const int echoPin = 10;
 
+    int sensing_delay = 500;
+
     pinMode(trigPin, true);   // OUTPUT
     pinMode(echoPin, false);  // INPUT
 
     while (true) {
         float distance = getDistance(trigPin, echoPin);
-        cout << "Distance: " << distance << " cm" << endl;
-        sleep_for(milliseconds(500));
+        sendDistance(distance, distance);
+        sleep_for(milliseconds(sensing_delay));
     }
 
     return 0;
