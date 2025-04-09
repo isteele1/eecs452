@@ -62,8 +62,8 @@ def update(frame):
                 raw_value = float(line)
             else:
                 #TODO: Adjust the kind of data to put in if sensor is not connected
-                # raw_value = 10 + 1 * np.sin(frame * 0.1) + np.random.uniform(-0.5, 0.5)
-                raw_value = 50 + amplitude * (1 if (frame % period) < (period // 2) else 0) + np.random.normal(0, 0.25)
+                raw_value = 60 + 2 * np.sin(frame * 0.1) + np.random.uniform(-0.5, 0.5)
+                # raw_value = 50 + amplitude * (1 if (frame % period) < (period // 2) else 0) + np.random.normal(0, 0.25)
             
             if jamming:
                 raw_value = 5 + np.random.normal(0, 0.25)
