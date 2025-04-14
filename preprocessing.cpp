@@ -12,14 +12,27 @@ using namespace std::chrono;
 
 HoltEMA::HoltEMA(double tau_l_, double tau_m_) : tau_l(tau_l_), tau_m(tau_m_) {}
 
-vector<vector<double>> stft(const deque<double>& x, const vector<double>& window, int stride) {
+vector<double> hamming(int N) {
+    vector<double> window(N);
+
+    for (int n = 0; n < N; ++n) {
+        window[n] = 0.54 - 0.46 * cos((2 * M_PI * n) / (N - 1));
+    }
+
+    return window;
+}   // End hamming()
+
+vector<vector<double>> stft(const kiss_fft_cfg &cfg, const deque<double> &x, const vector<double> &window, int stride) {
     int window_size = window.size();
+    if (window_size < x.size()) {
+        throw invalid_argument("Window size must be less than or equal to the size of the signal.");
+
+    }
     int time_length = (x.size() - window_size) / stride;
     int freq_bins = window_size / 2;
 
     vector<vector<double>> X(freq_bins, vector<double>(time_length, 0.0));
 
-    kiss_fft_cfg cfg = kiss_fft_alloc(window_size, 0, nullptr, nullptr);
     vector<kiss_fft_cpx> in(window_size);
     vector<kiss_fft_cpx> out(window_size);
 
@@ -45,7 +58,6 @@ vector<vector<double>> stft(const deque<double>& x, const vector<double>& window
         }
     }
 
-    free(cfg);
     return X;
 }   // End stft()
 
@@ -59,15 +71,10 @@ int main () {
     // STFT settings
     int N = 50;             // Window size: 4 seconds
     int L = 50;             // Stride: 0.25 seconds
-    double spec_length = (list_length - N)/L;      // Width of spectrogram
 
     // Holt EMA settings
     double tau_l = 0.2;
     double tau_m = 10;
-
-    cout << "Sampling Frequency: " << fs << endl;
-    cout << "Data Length: " << list_length << endl;
-    cout << "Dimensions of STFT: " << N/2 << "x" << spec_length << endl;
 
     double initial_value = 1.0E-10;
 
@@ -77,6 +84,11 @@ int main () {
     HoltEMA holt_filter = HoltEMA(tau_l, tau_m);
     auto start_time = high_resolution_clock::now();
 
+    // Create window
+    // vector<double> window(N, 1); // Rectangular window could be used if needed
+    vector<double> hamm = hamming(N);
+
+    kiss_fft_cfg cfg = kiss_fft_alloc(N, 0, nullptr, nullptr);
     while (true) {
         // Placeholder data incoming
         double raw_val = 40.5;
@@ -95,9 +107,8 @@ int main () {
         raw_data.pop_front();
         processed_data.pop_front();
 
-        // STFT processing
-        vector<double> window(N, 1);
-        vector<vector<double>> X = stft(raw_data, window, L);
+        // STFT Processing
+        vector<vector<double>> X = stft(cfg, raw_data, hamm, L);
 
         // Output distance data points
         cout << raw_val << " " << processed_val << "\n";
@@ -108,4 +119,5 @@ int main () {
         }
         cout << X.back().back() << "\n";
     }
+    free(cfg);
 }   // End main()
