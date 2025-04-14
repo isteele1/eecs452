@@ -127,7 +127,8 @@ def update(frame):
             # Future improvement: Adjust thresholding for relative change instead of absolute change
 
             power_values = np.sum(X, axis=0)
-
+            power_values[power_values < 0] = 0
+            
             high_threshold = 1000
             low_threshold = -100
 
