@@ -107,12 +107,25 @@ def update(frame):
             #         line = ' '.join(str(x) for x in X[:, spec_length-1])
             #         file.write(line + '\n')
 
+            # with open("frequencies.txt", "a") as file:
+            #         line = ' '.join(str(x) for x in frequency_powers)
+            #         file.write(line + '\n')
+
             ax2.clear()
             ax2.pcolormesh(t, f, X, shading='gouraud', cmap='inferno', vmin=0, vmax=70)
             ax2.title.set_text("Log-Amplitude Spectrogram")
             ax2.set_xlabel("Time")
             ax2.set_ylabel("Frequency (Hz)")
 
+            frequency_powers = np.sum(X[:, -1:], axis=1)
+            mean_frequency_power = np.mean(frequency_powers)
+            if mean_frequency_power > 1000/24:
+                spoof_detect = True
+            else:
+                spoof_detect = False
+
+            # Future improvement: Adjust thresholding for relative change instead of absolute change
+            
             power_values = np.sum(X, axis=0)
 
             high_threshold = 1000
@@ -140,6 +153,17 @@ def update(frame):
             # If the last frames are "Jamming"
             if jamming_start is not None and (len(classification) - jamming_start) >= min_dwell_frames:
                 regions.append((jamming_start, len(classification) - 1))
+                jam_detect = True
+            else:
+                jam_detect = False
+
+
+            if spoof_detect:
+                ax1.set_title("Spoofing Detected")
+            elif jam_detect:
+                ax1.set_title("Jamming Detected")
+            else:
+                ax1.set_title("No Attack Detected")
 
             ax3.clear()
             ax3.plot(t, power_values, label="Total Spectral Power", marker='o')
@@ -155,6 +179,11 @@ def update(frame):
                 # Shade the region where jamming is detected
                 # Extending a little to visually capture the region
                 ax3.axvspan(t[start], t[end], color='red', alpha=0.2)
+                start_frac = start/len(t)
+                end_frac = end/len(t)
+                start_distplot = int(len(timestamps)*start_frac)
+                end_distplot = int(len(timestamps)*end_frac)
+                ax1.axvspan(timestamps[start_distplot], timestamps[end_distplot], color='red', alpha=0.2)
         except ValueError:
             print("Error: Incorrect type. Please enter a valid string of numbers with comma separation.")
 
@@ -194,7 +223,8 @@ def stft(x, window, stride):
 
 # Main loop
 
-# open("output.txt", "w").close()
+open("output.txt", "w").close()
+open("frequencies.txt", "w").close()
 fig1.canvas.mpl_connect('key_press_event', on_key)
 fig2.canvas.mpl_connect('key_press_event', on_key)
 fig3.canvas.mpl_connect('key_press_event', on_key)
