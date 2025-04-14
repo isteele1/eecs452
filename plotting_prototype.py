@@ -138,8 +138,8 @@ def update(frame):
             
             power_values = np.sum(X, axis=0)
 
-            frame_count += 1
-            if not calibration_done:
+            if timestamp >= 10 and not calibration_done:
+                frame_count += 1
                 calibration_data.append(np.median(power_values))
                 if frame_count >= calibration_frames:
                     baseline = np.median(calibration_data)
