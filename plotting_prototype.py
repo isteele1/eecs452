@@ -194,7 +194,6 @@ def update(frame):
             ax3.axhline(y=high_threshold, color='red', linestyle='--', label="High Threshold")
             ax3.axhline(y=low_threshold, color='blue', linestyle='--', label="Low Threshold")
             ax3.set_xlim(-6, 0)
-            # ax3.set_ylim(0, 100)
             ax3.set_xlabel("Time Frame (Index)")
             ax3.set_ylabel("Total Power (Linear Units)")
             ax3.set_title("Spectral Power Analysis for Jamming Detection")
@@ -209,7 +208,7 @@ def update(frame):
                 end_distplot = int(len(timestamps)*end_frac)
                 ax1.axvspan(timestamps[start_distplot], timestamps[end_distplot], color='red', alpha=0.2)
         except ValueError:
-            print("Error: Incorrect type. Please enter a valid string of numbers with comma separation.")
+            print("Error in Update Function. Check variables and types.")
 
 # Handle keypress events
 def on_key(event):
@@ -219,20 +218,8 @@ def on_key(event):
         plt.close('all')
     elif event.key == 'j':  # Press 'j' to toggle jamming
         jamming = not jamming
-    elif event.key == 'p':  # Press 's' to toggle spoofing
+    elif event.key == 'p':  # Press 'p' to pause the plotting
         halt = not halt
-
-def detect_high_freq(window, fs, threshold_freq, some_threshold):
-    N = len(window)
-    freq = np.fft.fftfreq(N, d=1/fs)
-    spectrum = np.abs(np.fft.fft(window))
-
-    # Normalize
-    spectrum /= np.max(spectrum)
-
-    # Detect power in high-frequency bins
-    high_freq_power = np.sum(spectrum[freq > threshold_freq])
-    return high_freq_power > some_threshold
 
 def stft(x, window, stride):
     time_length = (len(x) - len(window))//stride
