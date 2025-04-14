@@ -124,6 +124,7 @@ def update(frame):
             classification[high_indices] = 1
             classification[low_indices] = 1
 
+            min_dwell_frames = 3
             regions = []
             jamming_start = None
             end = None
@@ -133,10 +134,11 @@ def update(frame):
                         jamming_start = i
                 else:
                     if jamming_start is not None:
-                        regions.append((jamming_start, i - 1))
+                        if (i-jamming_start) >= min_dwell_frames:
+                            regions.append((jamming_start, i - 1))
                         jamming_start = None
             # If the last frames are "Jamming"
-            if jamming_start is not None:
+            if jamming_start is not None and (len(classification) - jamming_start) >= min_dwell_frames:
                 regions.append((jamming_start, len(classification) - 1))
 
             ax3.clear()
