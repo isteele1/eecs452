@@ -6,85 +6,84 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
 from spoofing import HoltEMA
-from spoofing import JammingDetector
 import time
 
 # Settings
 port_name = "/dev/tty.usbmodem1103"  # Must be changed if port changes
 plotting_rate = 50 # in ms
+fs = 1/(plotting_rate/1000)
 list_length = int(10000 / plotting_rate)  # 10 seconds of data
 
-#TODO: Holt EMA settings
-tau_l = 0.1
-tau_m = 0.5
+#Holt EMA settings
+tau_l = 0.2
+tau_m = 10
 
 #TODO: STFT settings
-N = list_length//5
-L = list_length//20
-spec_length = (list_length - N)//L
+N = int(list_length//2.5)               # Window size: 4 seconds
+L = list_length//40                     # Stride: 0.25 seconds
+spec_length = (list_length - N)//L      # Width of spectrogram
 
-# 400 cm/s for top speed of hand
-#TODO: Jamming detection settings
-drop_threshold = 10                      # drop of drop window data in cm
-flatness_threshold = 1                  # range of window data in cm
-window_size = int(2000 / plotting_rate)  # full window (~2000ms)
-drop_window = int(500 / plotting_rate)   # how many samples ago to compare against (~500ms)
-
-#TODO: Toggle if sensor is connected for proper debugging away from an STM/Arduino
-sensor_connected = False                # Set to True if sensor is sending raw data to USB
+# Compute stft/energy with EMA if true
+clean_signal = False
 
 # Initialize flags
 jamming = False
-spoofing = False
+halt = False
 
-# Initialize arrays and serial communication
-if sensor_connected:
+# Check for serial communication
+try:
     ser = serial.Serial(port_name, 115200, timeout=1)
+    sensor_connected = True
+except serial.SerialException:
+    sensor_connected = False
+
+# Initialize arrays of data
 data = [1.0E-10 for i in range(list_length)]
 raw_data = [1.0E-10 for i in range(list_length)]
 processed_data = [1.0E-10 for i in range(list_length)]
 timestamps = np.linspace(-10, 0, list_length).tolist()
 
-# Initialize processing classes
+# Initialize Holt EMA processing class
 holt_filter = HoltEMA(tau_l, tau_m)
-jamming_detector = JammingDetector(drop_threshold, flatness_threshold, window_size, drop_window)
 start_time = time.time()
 
-# Plot update function
+# Declare plots and axes for each figure
+fig1, ax1 = plt.subplots(figsize=(8, 8))
+fig2, ax2 = plt.subplots(figsize=(8, 8))
+fig3, ax3 = plt.subplots(figsize=(8, 8))
+
+# Update function
 def update(frame):
-    if not sensor_connected:
-        line = True
-    else:
+    if sensor_connected:
         line = ser.readline().decode().strip()
-    if line:
+    else:
+        line = True
+    if line and not halt:
         try:
             # Parse raw data
             if sensor_connected:
                 raw_value = float(line)
             else:
-                #TODO: Adjust the kind of data to put in if sensor is not connected
+                # Simulate object sensing with fake data
                 raw_value = 60 + 2 * np.sin(frame * 4 * 2 * np.pi / plotting_rate) + np.random.uniform(-0.5, 0.5)
                 # raw_value = 50 + 8 * (1 if (frame % 80) < (80 // 2) else 0) + np.random.normal(0, 0.25)
-            
+
+            # Simulate jamming with fake data
             if jamming:
                 raw_value = 5 + np.random.normal(0, 0.25)
-            raw_data.append(raw_value)
-
+            
             # Process the data
             timestamp = time.time() - start_time
             holt_filter.spin_once(timestamp, raw_value)
             processed_value = holt_filter.predict(timestamp)
+
+            # Update data arrays
+            raw_data.append(raw_value)
             processed_data.append(processed_value)
-
-            # Check for jamming
-            #jam_detect, maybe_jam_detect = jamming_detector.update(raw_value)
-            #spoof_detect = False
-
-            # Update the data arrays
             raw_data.pop(0)
             processed_data.pop(0)
 
-            # Update the plot
+            # Update the distance plot
             ax1.clear()
             ax1.plot(timestamps, raw_data, label = "Raw Data")
             ax1.plot(timestamps, processed_data, label = "Processed Data")
@@ -94,38 +93,79 @@ def update(frame):
             ax1.set_xlabel("Time (seconds)")
             ax1.set_ylabel("Distance (cm)")
 
-            fs = 1/(plotting_rate/1000)
             window = np.ones(N)
-            X = stft(raw_data, window, L)
+            if clean_signal:
+                input_data = processed_data
+            else:
+                input_data = raw_data
+
+            X = stft(input_data, window, L)
             t = np.linspace(-10*(list_length - N)/list_length, 0, (list_length - N)//L)
             f = np.linspace(0, fs/2, N//2)
 
-            open("output.txt", "w").close()
-            with open("output.txt", "a") as f:
-                    line = ' '.join(str(x) for x in X[:, spec_length-1])
-                    f.write(line + '\n')
+            # with open("output.txt", "a") as file:
+            #         line = ' '.join(str(x) for x in X[:, spec_length-1])
+            #         file.write(line + '\n')
 
             ax2.clear()
-            ax2.pcolormesh(t, f, X, shading='gouraud', cmap='inferno', vmin=1, vmax=70)
+            ax2.pcolormesh(t, f, X, shading='gouraud', cmap='inferno', vmin=0, vmax=70)
             ax2.title.set_text("Log-Amplitude Spectrogram")
             ax2.set_xlabel("Time")
             ax2.set_ylabel("Frequency (Hz)")
 
-            detect = detect_high_freq(raw_data[list_length - list_length // 4:], fs, 40, 10)
+            power_values = np.sum(X, axis=0)
 
+            high_threshold = 1000
+            low_threshold = -100
+
+            classification = np.zeros(len(t))
+            high_indices = np.where(power_values > high_threshold)[0]
+            low_indices = np.where(power_values < low_threshold)[0]
+            classification[high_indices] = 1
+            classification[low_indices] = 1
+
+            regions = []
+            jamming_start = None
+            end = None
+            for i, elem in enumerate(classification):
+                if elem == 1:
+                    if jamming_start is None:
+                        jamming_start = i
+                else:
+                    if jamming_start is not None:
+                        regions.append((jamming_start, i - 1))
+                        jamming_start = None
+            # If the last frames are "Jamming"
+            if jamming_start is not None:
+                regions.append((jamming_start, len(classification) - 1))
+
+            ax3.clear()
+            ax3.plot(t, power_values, label="Total Spectral Power", marker='o')
+            ax3.axhline(y=high_threshold, color='red', linestyle='--', label="High Threshold")
+            ax3.axhline(y=low_threshold, color='blue', linestyle='--', label="Low Threshold")
+            ax3.set_xlim(-6, 0)
+            # ax3.set_ylim(0, 100)
+            ax3.set_xlabel("Time Frame (Index)")
+            ax3.set_ylabel("Total Power (Linear Units)")
+            ax3.set_title("Spectral Power Analysis for Jamming Detection")
+
+            for (start, end) in regions:
+                # Shade the region where jamming is detected
+                # Extending a little to visually capture the region
+                ax3.axvspan(t[start], t[end], color='red', alpha=0.2)
         except ValueError:
             print("Error: Incorrect type. Please enter a valid string of numbers with comma separation.")
 
 # Handle keypress events
 def on_key(event):
     global jamming
-    global spoofing
+    global halt
     if event.key == 'q':    # Press 'q' to quit
-        plt.close()
+        plt.close('all')
     elif event.key == 'j':  # Press 'j' to toggle jamming
         jamming = not jamming
-    elif event.key == 's':  # Press 's' to toggle spoofing
-        spoofing = not spoofing
+    elif event.key == 'p':  # Press 's' to toggle spoofing
+        halt = not halt
 
 def detect_high_freq(window, fs, threshold_freq, some_threshold):
     N = len(window)
@@ -151,8 +191,14 @@ def stft(x, window, stride):
     return X
 
 # Main loop
-fig, (ax1, ax2) = plt.subplots(1, 2)
 
-fig.canvas.mpl_connect('key_press_event', on_key)
-ani = animation.FuncAnimation(fig, update, interval=plotting_rate, save_count=list_length)
+# open("output.txt", "w").close()
+fig1.canvas.mpl_connect('key_press_event', on_key)
+fig2.canvas.mpl_connect('key_press_event', on_key)
+fig3.canvas.mpl_connect('key_press_event', on_key)
+
+ani1 = animation.FuncAnimation(fig1, update, interval=plotting_rate, save_count=list_length)
+ani2 = animation.FuncAnimation(fig2, update, interval=plotting_rate, save_count=list_length)
+ani3 = animation.FuncAnimation(fig3, update, interval=plotting_rate, save_count=list_length)
+
 plt.show()
