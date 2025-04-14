@@ -1,4 +1,3 @@
-# Holds classes used in plotting_prototype.py
 import numpy as np
 
 #EMA for tracking timestamps
@@ -35,6 +34,3 @@ class HoltEMA:
     
     def predict(self, x):
         return (self.m*(x - self.x) + self.l)
-    
-    def predict_optimal_send(self, y):
-        return round((y - self.l)/self.m) + self.x

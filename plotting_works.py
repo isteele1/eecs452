@@ -20,7 +20,7 @@ tau_m = 10
 
 # TODO: STFT settings
 N = int(list_length // 2.5)  # Window size: 4 seconds
-L = list_length // 40  # Stride: 0.25 seconds
+L = int(list_length // 40)  # Stride: 0.25 seconds
 spec_length = (list_length - N) // L  # Width of spectrogram
 
 # Compute stft/energy with EMA if true
@@ -87,7 +87,7 @@ def update(frame):
             ax1.clear()
             ax1.plot(timestamps, raw_data, label="Raw Data")
             ax1.plot(timestamps, processed_data, label="Processed Data")
-            ax1.set_ylim(0, 300)
+            ax1.set_ylim(0, 150)
             ax1.set_xlim(-10, 0)
             ax1.legend(loc="upper left")
             ax1.set_xlabel("Time (seconds)")
@@ -117,9 +117,9 @@ def update(frame):
             ax2.set_xlabel("Time")
             ax2.set_ylabel("Frequency (Hz)")
 
-            frequency_powers = np.sum(X[:, -1:], axis=1)
+            frequency_powers = np.sum(X[:, -4:], axis=1)
             mean_frequency_power = np.mean(frequency_powers)
-            if mean_frequency_power > 1000 / 24:
+            if mean_frequency_power > 1000 / 6:
                 spoof_detect = True
             else:
                 spoof_detect = False
@@ -128,8 +128,8 @@ def update(frame):
 
             power_values = np.sum(X, axis=0)
             power_values[power_values < 0] = 0
-            
-            high_threshold = 1000
+
+            high_threshold = 1200
 
             classification = np.zeros(len(t))
             high_indices = np.where(power_values > high_threshold)[0]
@@ -156,9 +156,9 @@ def update(frame):
                 jam_detect = False
 
             if spoof_detect:
-                ax1.set_title("Spoofing Detected")
+                ax1.set_title("Attack Detected")
             elif jam_detect:
-                ax1.set_title("Jamming Detected")
+                ax1.set_title("Attack Detected")
             else:
                 ax1.set_title("No Attack Detected")
 
