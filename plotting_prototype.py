@@ -52,8 +52,18 @@ fig1, ax1 = plt.subplots(figsize=(8, 8))
 fig2, ax2 = plt.subplots(figsize=(8, 8))
 fig3, ax3 = plt.subplots(figsize=(8, 8))
 
+calibration_frames = 50
+calibration_data = []
+calibration_done = False
+global_high_threshold = None
+global_low_threshold = None
+frame_count = 0
+
 # Update function
 def update(frame):
+    global frame_count, calibration_done, calibration_data
+    global global_high_threshold, global_low_threshold
+
     if sensor_connected:
         line = ser.readline().decode().strip()
     else:
@@ -115,8 +125,22 @@ def update(frame):
 
             power_values = np.sum(X, axis=0)
 
-            high_threshold = 1000
-            low_threshold = -100
+            frame_count += 1
+            if not calibration_done:
+                calibration_data.append(np.median(power_values))
+                if frame_count >= calibration_frames:
+                    baseline = np.median(calibration_data)
+                    std_dev = np.std(calibration_data)
+                    global_high_threshold = baseline + 2*std_dev
+                    global_low_threshold = baseline - 2*std_dev
+                    calibration_done = True
+
+            if calibration_done:
+                high_threshold = global_high_threshold
+                low_threshold = global_low_threshold
+            else:
+                high_threshold = 1000
+                low_threshold = -100
 
             classification = np.zeros(len(t))
             high_indices = np.where(power_values > high_threshold)[0]
