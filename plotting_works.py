@@ -129,13 +129,10 @@ def update(frame):
             power_values = np.sum(X, axis=0)
 
             high_threshold = 1000
-            low_threshold = -100
 
             classification = np.zeros(len(t))
             high_indices = np.where(power_values > high_threshold)[0]
-            low_indices = np.where(power_values < low_threshold)[0]
             classification[high_indices] = 1
-            classification[low_indices] = 1
 
             min_dwell_frames = 3
             regions = []
@@ -167,7 +164,6 @@ def update(frame):
             ax3.clear()
             ax3.plot(t, power_values, label="Total Spectral Power", marker='o')
             ax3.axhline(y=high_threshold, color='red', linestyle='--', label="High Threshold")
-            ax3.axhline(y=low_threshold, color='blue', linestyle='--', label="Low Threshold")
             ax3.set_xlim(-6, 0)
             # ax3.set_ylim(0, 100)
             ax3.set_xlabel("Time Frame (Index)")
