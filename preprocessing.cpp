@@ -1,3 +1,4 @@
+// preprocessing.cpp
 #include "HoltEMA.h"
 extern "C" {
     #include "kiss_fft130/kiss_fft.h"
@@ -23,9 +24,8 @@ vector<double> hamming(int N) {
 
 vector<vector<double>> stft(const kiss_fft_cfg &cfg, const deque<double> &x, const vector<double> &window, int stride) {
     int window_size = window.size();
-    if (window_size < x.size()) {
+    if (window_size > x.size()) {
         throw invalid_argument("Window size must be less than or equal to the size of the signal.");
-
     }
     int time_length = (x.size() - window_size) / stride;
     int freq_bins = window_size / 2;
@@ -78,7 +78,6 @@ int main () {
     double initial_value = 1.0E-10;
 
     deque<double> raw_data(list_length, initial_value);
-    deque<double> processed_data(list_length, initial_value);
 
     HoltEMA holt_filter = HoltEMA(tau_l, tau_m);
     auto start_time = high_resolution_clock::now();
@@ -102,9 +101,7 @@ int main () {
 
         // Update data arrays
         raw_data.push_back(raw_val);
-        processed_data.push_back(processed_val);
         raw_data.pop_front();
-        processed_data.pop_front();
 
         // STFT Processing
         vector<vector<double>> X = stft(cfg, raw_data, hamm, L);
