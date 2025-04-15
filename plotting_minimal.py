@@ -21,11 +21,12 @@ halt = False
 ser = serial.Serial(port_name, 115200, timeout=1)
 
 # Initialize arrays of data
-data = [1.0E-10 for i in range(list_length)]
 raw_data = [1.0E-10 for i in range(list_length)]
 processed_data = [1.0E-10 for i in range(list_length)]
 timestamps = np.linspace(-10, 0, list_length).tolist()
-
+stft_matrix = np.full((int(N/2), spec_length), 1.0E-10)
+t = np.linspace(-10 * (list_length - N) / list_length, 0, (list_length - N) // L)
+f = np.linspace(0, fs/2, int(N/2))
 
 # Declare plots and axes for each figure
 fig1, ax1 = plt.subplots(figsize=(8, 8))
@@ -41,7 +42,7 @@ def update(frame):
 
     # Read and decode second line: array of floats
     line2 = ser.readline().decode().strip()
-    float_array = np.fromstring(line2, sep=' ')
+    stft_array = np.fromstring(line2, sep=' ')
     if line1 and line2 and not halt:
         try:
             # Update data arrays
@@ -50,20 +51,26 @@ def update(frame):
             raw_data.pop(0)
             processed_data.pop(0)
 
-            # Update the distance plot
+            stft_matrix = np.roll(stft_matrix, -1, axis=1)
+            stft_matrix[:, -1] = stft_array
+
+            # Update plots 1 and 2
             ax1.clear()
             ax1.plot(timestamps, raw_data, label="Raw Data")
             ax1.plot(timestamps, processed_data, label="Processed Data")
-            ax1.set_ylim(0, 150)
+            ax1.set_ylim(0, 120)
             ax1.set_xlim(-10, 0)
             ax1.legend(loc="upper left")
             ax1.set_xlabel("Time (seconds)")
             ax1.set_ylabel("Distance (cm)")
 
-            stft_matrix = np.full((int(N/2), spec_length), 1.0E-10)
-            t = np.linspace(-10 * (list_length - N) / list_length, 0, (list_length - N) // L)
-            f = np.linspace(0, fs / 2, N // 2)
-
+            ax2.clear()
+            ax2.pcolormesh(t, f, stft_matrix, shading='gouraud', cmap='inferno', vmin=0, vmax=70)
+            ax2.title.set_text("Log-Amplitude Spectrogram")
+            ax2.set_xlabel("Time")
+            ax2.set_ylabel("Frequency (Hz)")
+            
+            # Write data to output files for debugging/manual thresholding
             # with open("output.txt", "a") as file:
             #         line = ' '.join(str(x) for x in X[:, spec_length-1])
             #         file.write(line + '\n')
@@ -72,13 +79,7 @@ def update(frame):
             #         line = ' '.join(str(x) for x in frequency_powers)
             #         file.write(line + '\n')
 
-            ax2.clear()
-            ax2.pcolormesh(t, f, X, shading='gouraud', cmap='inferno', vmin=0, vmax=70)
-            ax2.title.set_text("Log-Amplitude Spectrogram")
-            ax2.set_xlabel("Time")
-            ax2.set_ylabel("Frequency (Hz)")
-
-            frequency_powers = np.sum(X[:, -4:], axis=1)
+            frequency_powers = np.sum(stft_matrix[:, -4:], axis=1)
             mean_frequency_power = np.mean(frequency_powers)
             if mean_frequency_power > 1000 / 6:
                 spoof_detect = True
