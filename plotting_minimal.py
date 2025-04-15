@@ -44,14 +44,9 @@ def update(frame):
     float_array = np.fromstring(line2, sep=' ')
     if line1 and line2 and not halt:
         try:
-            # Process the data
-            timestamp = time.time() - start_time
-            holt_filter.spin_once(timestamp, raw_value)
-            processed_value = holt_filter.predict(timestamp)
-
             # Update data arrays
-            raw_data.append(raw_value)
-            processed_data.append(processed_value)
+            raw_data.append(raw_val)
+            processed_data.append(processed_val)
             raw_data.pop(0)
             processed_data.pop(0)
 
@@ -65,13 +60,7 @@ def update(frame):
             ax1.set_xlabel("Time (seconds)")
             ax1.set_ylabel("Distance (cm)")
 
-            window = np.ones(N)
-            if clean_signal:
-                input_data = processed_data
-            else:
-                input_data = raw_data
-
-            X = stft(input_data, window, L)
+            stft_matrix = np.full((int(N/2), spec_length), 1.0E-10)
             t = np.linspace(-10 * (list_length - N) / list_length, 0, (list_length - N) // L)
             f = np.linspace(0, fs / 2, N // 2)
 

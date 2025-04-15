@@ -1,16 +1,15 @@
 #include "HoltEMA.h"
-#include "kiss_fft.h"
+extern "C" {
+    #include "kiss_fft130/kiss_fft.h"
+}
 
 #include <vector>
 #include <iostream>
 #include <cmath>
 #include <chrono>
-#include <random>
 
 using namespace std;
 using namespace std::chrono;
-
-HoltEMA::HoltEMA(double tau_l_, double tau_m_) : tau_l(tau_l_), tau_m(tau_m_) {}
 
 vector<double> hamming(int N) {
     vector<double> window(N);
