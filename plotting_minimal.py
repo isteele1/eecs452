@@ -14,7 +14,7 @@ list_length = int(10000 / plotting_rate)  # 10 seconds of data
 # STFT settings
 N = 50
 L = 50
-spec_length = (list_length - N) // L  # Width of spectrogram
+spec_length = np.floor((list_length - N)/L) + 1  # Width of spectrogram
 
 halt = False
 
@@ -25,7 +25,7 @@ raw_data = [1.0E-10 for i in range(list_length)]
 processed_data = [1.0E-10 for i in range(list_length)]
 timestamps = np.linspace(-10, 0, list_length).tolist()
 stft_matrix = np.full((int(N/2), spec_length), 1.0E-10)
-t = np.linspace(-10 * (list_length - N) / list_length, 0, (list_length - N) // L)
+t = np.linspace(-10, 0, spec_length)
 f = np.linspace(0, fs/2, int(N/2))
 
 # Declare plots and axes for each figure
@@ -65,6 +65,10 @@ def update(frame):
             ax1.set_ylabel("Distance (cm)")
 
             ax2.clear()
+            print("Min Value of STFT")
+            print(np.min(np.min(stft_matrix, axis=1)))
+            print("Max Value of STFT")
+            print(np.max(np.max(stft_matrix, axis=1)))
             ax2.pcolormesh(t, f, stft_matrix, shading='gouraud', cmap='inferno', vmin=0, vmax=70)
             ax2.title.set_text("Log-Amplitude Spectrogram")
             ax2.set_xlabel("Time")
@@ -78,17 +82,17 @@ def update(frame):
             # with open("frequencies.txt", "a") as file:
             #         line = ' '.join(str(x) for x in frequency_powers)
             #         file.write(line + '\n')
-
-            frequency_powers = np.sum(stft_matrix[:, -4:], axis=1)
+            mean_thresh = 500
+            frequency_powers = np.sum(stft_matrix[:, -10:], axis=1)
             mean_frequency_power = np.mean(frequency_powers)
-            if mean_frequency_power > 1000 / 6:
+            if mean_frequency_power > mean_thresh:
                 spoof_detect = True
             else:
                 spoof_detect = False
 
             # Future improvement: Adjust thresholding for relative change instead of absolute change
 
-            power_values = np.sum(X, axis=0)
+            power_values = np.sum(stft_matrix, axis=0)
             power_values[power_values < 0] = 0
 
             high_threshold = 1200
@@ -181,7 +185,6 @@ def stft(x, window, stride):
         freq_data = freq_data[:len(freq_data) // 2]
         X[:, i] = 20 * np.log10(freq_data)
     return X
-
 
 # Main loop
 
