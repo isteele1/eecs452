@@ -19,8 +19,8 @@ tau_l = 0.2
 tau_m = 10
 
 # TODO: STFT settings
-N = int(list_length // 2.5)  # Window size: 4 seconds
-L = int(list_length // 40)  # Stride: 0.25 seconds
+N = 40  # Window size: 4 seconds
+L = 40  # Stride: 0.25 seconds
 spec_length = (list_length - N) // L  # Width of spectrogram
 
 # Compute stft/energy with EMA if true
@@ -55,14 +55,15 @@ fig3, ax3 = plt.subplots(figsize=(8, 8))
 # Update function
 def update(frame):
     if sensor_connected:
-        line = ser.readline().decode().strip()
+        line1 = ser.readline().decode('utf-8').strip()
+        a_str, b_str = line1.split()
     else:
-        line = True
-    if line and not halt:
+        line1 = True
+    if line1 and not halt:
         try:
             # Parse raw data
             if sensor_connected:
-                raw_value = float(line)
+                raw_value = float(a_str)
             else:
                 # Simulate object sensing with fake data
                 raw_value = 60 + 2 * np.sin(frame * 4 * 2 * np.pi / plotting_rate) + np.random.uniform(-0.5, 0.5)
