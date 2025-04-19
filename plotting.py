@@ -1,4 +1,3 @@
-# Plotting script to run on a PC with processed input from the STM32
 
 import serial
 import matplotlib.pyplot as plt
@@ -6,7 +5,6 @@ import matplotlib.animation as animation
 import numpy as np
 from collections import deque
 import time
-# from scipy.stats import skew, kurtosis
 
 def stft(x, window, stride):
     time_length = int((list_length - len(window))/stride) + 1

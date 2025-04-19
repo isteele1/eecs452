@@ -1,0 +1,16 @@
+COPYRIGHT NOTICE
+
+Title: Ultrasonic Anti-Spoofing Algorithm
+Authors: Jack Brady, Leela Mukherjee, Ian Steele
+Institution: University of Michigan
+Date: April 2025
+
+© 2025 Jack Brady, Leela Mukherjee, Ian Steele. All rights reserved.
+
+This document and accompanying materials are protected under applicable copyright laws. You are granted a license for unrestricted use of this material for educational purposes, including teaching, at any educational institutions. This includes the rights to share, distribute, and display the materials for classroom use and other educational activities.
+
+Any other uses of these materials, including but not limited to reproduction, modification, distribution, or transmission for commercial purposes, or for any other purposes beyond educational teaching, are prohibited without prior written permission from the authors.
+
+For permissions or inquiries regarding other uses, please contact: isteele@umich.edu
+
+By using these materials, you agree to the terms stated herein.
