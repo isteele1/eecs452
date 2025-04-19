@@ -1,4 +1,3 @@
-```markdown
 # Ultrasonic Anti-Spoofing Algorithm
 
 This README file provides an overview of the contents included in this package, along with information on team members involved in the project.
@@ -30,4 +29,3 @@ This zip file contains the following directories:
 ## Conclusion
 
 We hope this package provides complete information on our project and allows anyone to reproduce our results and physical design for educational purposes if they desire. Reach out to us via our provided email addresses with technical questions or other concerns. Thank you for your interest in our work!
-```
