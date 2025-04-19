@@ -29,13 +29,10 @@ This repository contains the following folders:
 We hope this repository provides complete information on our project and allows anyone to reproduce our results and physical design for educational purposes if they desire. Reach out to us via our provided email addresses with technical questions or other concerns. Thank you for your interest in our work!
 
 
+https://github.com/user-attachments/assets/082369e8-9372-496c-8e70-9b12c22d7c52
 
 
-https://github.com/user-attachments/assets/7a18a30f-551f-42ae-859d-f1e7edbd00ac
-
-
-
-https://github.com/user-attachments/assets/a2b3e47c-f1cf-45dc-92e9-e596fab920e2
+https://github.com/user-attachments/assets/844d2bd0-8bcc-465c-8e10-2c3f6a66fbca
 
 
 ![IMG_6982](https://github.com/user-attachments/assets/853cbf2c-87ab-46b4-a304-941e99feff46)
