@@ -1,0 +1,18 @@
+Ultrasonic Anti-Spoofing Algorithm
+==========================
+This is a comprehensive part list, covering our purchase orders and parts obtained in labs.
+** What information do we need to have in all of these besides price and links?**
+
+Lab Parts
+–––––––––––––––
+– 2x HC-SR04 Ultrasonic Sensor
+– 2x Breadboard
+– Wires
+– USB-A to Micro-USB cable
+
+Purchased Parts
+–––––––––––––––
+– 1x STM32 (what kind?)
+– Wood Pieces from Home Depot (link)
+– Wood screws
+– Junction Box from Home Depot (unless Jack is tanking that one)
