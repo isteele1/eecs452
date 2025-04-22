@@ -1,0 +1,17 @@
+Ultrasonic Anti-Spoofing Algorithm
+==========================
+This file provides user interface documentation, including how to run the code and controls available while the code runs.
+
+How to Run the Code
+–––––––––––––––
+All the source files except plotting.py should be put in a project in STM32CubeIDE and flashed to the STM32 with a USB connection. The ultrasonic sensors should be attached as appropriate to the pins of the STM32 and the STM32 should be powered and transfer data through a Micro-USB cable. Run plotting.py in the Python IDE of your choice on a PC that can support Python 3 with the necessary libraries installed. Be sure that the port name and N, L values in the Python file are the proper ones, aligning with the N, L values in the STM32 code and the port name of the PC used.
+
+Live Controls
+–––––––––––––––
+– STM32 blue button: Toggles the attack mode of the attacking ultrasonic sensor between [No Attack, Jamming, Spoofing]. This can be used to demonstrate the algorithm's functionality recognizing attacks and testing how the signals work between the ultrasonic sensors.
+– 'q' key on PC keyboard: Quits the Python program safely and entirely. Shuts down plots and ends the code. Useful if the plotting memory fills up, there is an error with serial, or the code needs to be shut down for some other reason.
+– 'p' key on PC keyboard: Pauses the Python plots. Does not stop the sensors from reading data or serial from transmitting it, so when it is pressed again, data will continue to be transmitted live with no backlog. Useful for keeping certain data on-screen for screenshots or to demonstrate certain aspects of the program to an audience, like we did with our design expo.
+
+Expected Behavior
+–––––––––––––––
+The ultrasonic sensors and Python visualization script should plot the data to a Matplotlib animation window. These should be live, but may be a little slower than live due to the processing overhead of the animation window. Increasing the sampling period of the defender sensor should help this. The type of attack, if an attack is detected, will be displayed in the title of the first plot (Distance vs. Time). There are no other console messages or diagnostic info, although occasionally error messages may pop up in the Python terminal. These can be disregarded as we have not found functionality to be interrupted from them.

@@ -1,0 +1,21 @@
+Ultrasonic Anti-Spoofing Algorithm
+==========================
+This file provides documentation on setup, compilation, and installation of the tools required in the project.
+
+Setting Up the STM32
+–––––––––––––––
+Ensure a proper hardware setup with wires/breadboards connecting the various sensors to the STM. A support system to mount the sensors is highly recommended–see our other documentation on hardware setup.
+
+Install the STM32CubeIDE by going to the following website and clicking on the appropriate installer for your system:
+https://www.st.com/en/development-tools/stm32cubeide.html
+Open a .ioc project in this IDE and plug in the files in src besides plotting.py. Build and run the program.
+
+Setting Up Python Plotting
+–––––––––––––––
+Make sure the proper dependencies for the Python file have been installed. Go to a Unix terminal in the same directory as plotting.py and run:
+>> pip install pyserial matplotlib numpy
+
+Plug in the STM32 to your PC and find its COM port by running:
+>> python3 plotting.py --port COM3
+
+Enter this port name into the top of plotting.py. Run the program in your Python IDE of choice.

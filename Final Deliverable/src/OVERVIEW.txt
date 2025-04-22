@@ -1,0 +1,19 @@
+Ultrasonic Anti-Spoofing Algorithm
+==========================
+This file provides an overview of the source code files and details how they work together to make our code operational.
+
+Files
+–––––––––––––––
+– plotting.py: Takes in distance and STFT data from serial, plots it, and determines whether an attack happened based on distance and distance frequency data
+TODO: add the rest of the files. Explain any necessary additional steps in this area and below.
+
+Hardware Components
+–––––––––––––––
+– STM32 microcontroller
+– 2x Ultrasonic Sensors (HC-SR04)
+– Serial USB connection to a PC
+– PC running a Python script
+
+Operation
+–––––––––––––––
+Essentially, we have two parts of our code. The first is the processing on the STM32, which uses interrupts and timers to operate trigger and echo pulses on the two ultrasonic sensors. Trigger pulses are sent out at fixed intervals (set by default at 25 ms). Echo times are converted to distance with the speed of sound. The STM32 performs a Holt exponential moving average and STFT on this distance data. This output gets sent via USB to a connected PC to run the second part of our code. This is a single Python file which takes the data, plots it, and determines if an attack happened and what the attack might be by using unexpected patterns in distance and frequency characteristics.
