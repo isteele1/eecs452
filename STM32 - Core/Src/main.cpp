@@ -100,8 +100,6 @@ double tau_m = 10;
 double initial_value = 1.0E-10;
 
 volatile double attack_interval_ms = 50;
-
-//deque<double> raw_data(list_length, initial_value);
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -116,23 +114,23 @@ static void MX_TIM2_Init(void);
 double measure_distance(uint16_t TRIG_PIN, uint16_t ECHO_PIN) {
 	double val1, val2;
 
-    HAL_GPIO_WritePin(GPIOC, TRIG_PIN, GPIO_PIN_SET);  // pull the TRIG pin HIGH
-    __HAL_TIM_SET_COUNTER(&htim1, 0);
-    while (__HAL_TIM_GET_COUNTER(&htim1) < 10);  // wait for 10 us
-
-    HAL_GPIO_WritePin(GPIOC, TRIG_PIN, GPIO_PIN_RESET);  // pull the TRIG pin low
-
-    pMillis = HAL_GetTick() + 10; // used this to avoid infinite while loop (for timeout)
-    // wait for the echo pin to go high
-    while (!(HAL_GPIO_ReadPin(GPIOC, ECHO_PIN)) && HAL_GetTick() < pMillis);
-    val1 = __HAL_TIM_GET_COUNTER(&htim1);
-
-    pMillis = HAL_GetTick() + 50; // used this to avoid infinite while loop (for timeout)
-    // wait for the echo pin to go low
-    while ((HAL_GPIO_ReadPin(GPIOC, ECHO_PIN)) && HAL_GetTick() < pMillis);
-    val2 = __HAL_TIM_GET_COUNTER(&htim1);
-
-    return (val2-val1)* 0.0343f/2.0f;
+	HAL_GPIO_WritePin(GPIOC, TRIG_PIN, GPIO_PIN_SET);  // pull the TRIG pin HIGH
+	__HAL_TIM_SET_COUNTER(&htim1, 0);
+	while (__HAL_TIM_GET_COUNTER(&htim1) < 10);  // wait for 10 us
+	
+	HAL_GPIO_WritePin(GPIOC, TRIG_PIN, GPIO_PIN_RESET);  // pull the TRIG pin low
+	
+	pMillis = HAL_GetTick() + 10; // used this to avoid infinite while loop (for timeout)
+	// wait for the echo pin to go high
+	while (!(HAL_GPIO_ReadPin(GPIOC, ECHO_PIN)) && HAL_GetTick() < pMillis);
+	val1 = __HAL_TIM_GET_COUNTER(&htim1);
+	
+	pMillis = HAL_GetTick() + 50; // used this to avoid infinite while loop (for timeout)
+	// wait for the echo pin to go low
+	while ((HAL_GPIO_ReadPin(GPIOC, ECHO_PIN)) && HAL_GetTick() < pMillis);
+	val2 = __HAL_TIM_GET_COUNTER(&htim1);
+	
+	return (val2-val1)* 0.0343f/2.0f;
 }
 
 void attack(uint16_t TRIG_PIN){
@@ -143,77 +141,36 @@ void attack(uint16_t TRIG_PIN){
 }
 
 vector<double> hamming(int N) {
-    vector<double> window(N);
-
-    for (int n = 0; n < N; ++n) {
-        window[n] = 0.54 - 0.46 * cos((2 * M_PI * n) / (N - 1));
-    }
-
-    return window;
+	vector<double> window(N);
+	
+	for (int n = 0; n < N; ++n) {
+		window[n] = 0.54 - 0.46 * cos((2 * M_PI * n) / (N - 1));
+	}
+	
+	return window;
 }   // End hamming()
 
-//vector<vector<double>> stft(const kiss_fft_cfg &cfg, const deque<double> &x, const vector<double> &window, int stride) {
-//    int window_size = window.size();
-////    if (window_size > x.size()) {
-////        throw invalid_argument("Window size must be less than or equal to the size of the signal.");
-////    }
-//    int time_length = (x.size() - window_size) / stride;
-//    int freq_bins = window_size / 2;
-//
-//    vector<vector<double>> X(freq_bins, vector<double>(time_length, 0.0));
-//
-//    vector<kiss_fft_cpx> in(window_size);
-//    vector<kiss_fft_cpx> out(window_size);
-//
-//    for (int i = 0; i < time_length; ++i) {
-//        int start = i * stride;
-//
-//        // Prepare input with window applied
-//        for (int j = 0; j < window_size; ++j) {
-//            in[j].r = x[start + j] * window[j];
-//            in[j].i = 0.0;
-//        }
-//
-//        // Run FFT
-//        kiss_fft(cfg, in.data(), out.data());
-//
-//        // Compute magnitude spectrum (log-scaled)
-//        for (int k = 0; k < freq_bins; ++k) {
-//            double real = out[k].r;
-//            double imag = out[k].i;
-//            double magnitude = std::sqrt(real * real + imag * imag);
-//            if (magnitude == 0.0) magnitude = 1e-10;
-//            X[k][i] = 20 * std::log10(magnitude);
-//        }
-//    }
-//
-//    return X;
-//}   // End stft()
-
 vector<vector<double>> stft(const kiss_fft_cfg &cfg, const double x[], size_t x_size, size_t current_idx, const vector<double> &window, int stride) {
-    int window_size = window.size();
-//    if (window_size > x.size()) {
-//        throw invalid_argument("Window size must be less than or equal to the size of the signal.");
-//    }
-    int time_length = (x_size - window_size) / stride;
-    int freq_bins = window_size / 2;
+	int window_size = window.size();
+	//    if (window_size > x.size()) {
+	//        throw invalid_argument("Window size must be less than or equal to the size of the signal.");
+	//    }
+	int time_length = (x_size - window_size) / stride;
+	int freq_bins = window_size / 2;
+	
+	vector<vector<double>> X(freq_bins, vector<double>(time_length, 0.0));
+	
+	vector<kiss_fft_cpx> in(window_size);
+	vector<kiss_fft_cpx> out(window_size);
 
-    vector<vector<double>> X(freq_bins, vector<double>(time_length, 0.0));
-
-    vector<kiss_fft_cpx> in(window_size);
-    vector<kiss_fft_cpx> out(window_size);
-
-    for (int i = 0; i < time_length; ++i) {
+	for (int i = 0; i < time_length; ++i) {
         int start = i * stride;
 
         // Prepare input with window applied
         for (int j = 0; j < window_size; ++j) {
-        	size_t idx = (current_idx + start + j) % x_size;
-
-
-//            in[j].r = x[start + j] * window[j];
-            in[j].r = x[idx] * window[j];
-            in[j].i = 0.0;
+		size_t idx = (current_idx + start + j) % x_size;
+		in[j].r = x[idx] * window[j];
+		in[j].i = 0.0;
         }
 
         // Run FFT
@@ -223,14 +180,14 @@ vector<vector<double>> stft(const kiss_fft_cfg &cfg, const double x[], size_t x_
         for (int k = 0; k < freq_bins; ++k) {
             double real = out[k].r;
             double imag = out[k].i;
-            double magnitude = std::sqrt(real * real + imag * imag);
+            double magnitude = std::sqrt(real * real + imag * image);
 
-            if (magnitude == 0.0) magnitude = 1e-10;
-            X[k][i] = 20 * std::log10(magnitude);
-        }
-    }
+        	if (magnitude == 0.0) magnitude = 1e-10;
+            		X[k][i] = 20 * std::log10(magnitude);
+        	}
+   	}
 
-    return X;
+	return X;
 }   // End stft()
 /* USER CODE END PFP */
 
@@ -274,29 +231,24 @@ int main(void)
   MX_RNG_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-  HAL_TIM_Base_Start(&htim1);
-    HAL_GPIO_WritePin(GPIOC, TRIG_PIN_ATTACK, GPIO_PIN_RESET);  // pull the TRIG pin low
+	HAL_TIM_Base_Start(&htim1);
+	HAL_GPIO_WritePin(GPIOC, TRIG_PIN_ATTACK, GPIO_PIN_RESET);  // pull the TRIG pin low
+	double last_attack_time = 0;
 
-  //  double jamming_attack_interval_ms = 50; // 50 Hz "jamming" rate
-  //  double random_attack_interval_ms = 500;
-    double last_attack_time = 0;
-
-
-    HoltEMA holt_filter = HoltEMA(tau_l, tau_m);
-    uint32_t start_time = HAL_GetTick();
-
-    // Create window
-    vector<double> window(N, 1); // Rectangular window could be used if needed
-    vector<double> hamm = hamming(N);
-    int freq_bins = hamm.size()/2;
-
-    kiss_fft_cfg cfg = kiss_fft_alloc(N, 0, nullptr, nullptr);
-
-
-    for (size_t i = 0; i < LIST_LENGTH; i++){
-    	raw_data[i] = initial_value;
-    }
-    raw_data_index = 0;
+	HoltEMA holt_filter = HoltEMA(tau_l, tau_m);
+	uint32_t start_time = HAL_GetTick();
+	
+	// Create window
+	vector<double> window(N, 1); // Rectangular window could be used if needed
+	vector<double> hamm = hamming(N);
+	int freq_bins = hamm.size()/2;
+	
+	kiss_fft_cfg cfg = kiss_fft_alloc(N, 0, nullptr, nullptr);
+	
+	for (size_t i = 0; i < LIST_LENGTH; i++){
+		raw_data[i] = initial_value;
+	}
+	raw_data_index = 0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -324,23 +276,15 @@ int main(void)
 		  uint32_t end_time = HAL_GetTick();
 		  double time_secs = (end_time-start_time)/1000.0;
 
-   //	      auto end_time = high_resolution_clock::now();
-   //	      duration<double> elapsed = end_time - start_time;
-   //	      double time_secs = elapsed.count();
-
 		  /* Spin Holt EMA for processing */
 		  holt_filter.spin_once(time_secs, new_dist);
 		  double processed_dist = holt_filter.predict(time_secs);
 
 		  /* Update data arrays */
-   //	      raw_data.push_back(new_dist);
-   //	      raw_data.pop_front();
-
 		  raw_data[raw_data_index] = new_dist;
 		  raw_data_index = (raw_data_index + 1) % LIST_LENGTH;
 
 		  /* STFT Processing */
-   //	      vector<vector<double>> X = stft(cfg, raw_data, hamm, L);
 		  vector<vector<double>> X = stft(cfg, raw_data, LIST_LENGTH, raw_data_index, hamm, L);
 
 		  /* Output distance data points */
