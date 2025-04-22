@@ -1,27 +1,15 @@
-# Import libraries
+# File: plotting.py
+# Author: Ian Steele
+# Description: Real-time visualization of distance and attack detection from STM32 data
+# Requirements: numpy, matplotlib, pyserial
+# Last Updated: 2025-04-22
+
 import serial
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
 from collections import deque
 import time
-
-### stft()
-### Custom Short-Time Fourier Transform function
-### -------------------------
-# x:        np.array of data
-# window:   np.array of window coefficients
-# stride:   integer of hop length between data windows taken
-def stft(x, window, stride):
-    time_length = int((list_length - len(window))/stride) + 1
-    X = np.zeros((len(window) // 2, time_length), dtype=np.float64)
-    for i in range(0, time_length):
-        data = x[i * stride:i * stride + len(window)]
-        freq_data = np.abs(np.fft.fft(data * window, len(window)))
-        freq_data[freq_data == 0] = 1e-10
-        freq_data = freq_data[:len(freq_data) // 2]
-        X[:, i] = 20 * np.log10(freq_data)
-    return X
 
 # Settings
 port_name = "/dev/tty.usbmodem1103" # Must be changed to port name used to connect STM
