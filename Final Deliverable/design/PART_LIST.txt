@@ -10,6 +10,7 @@ Lab Parts
 – 1x Breadboard
 – 12x jumper wires (10 Female-to-Male, 2 Male-to-Male)
 – USB-A to Micro-USB cable
+- 2 3D Printed Ultrasonic Sensor Stands (https://www.thingiverse.com/thing:189585)
 
 
 Purchased Parts
