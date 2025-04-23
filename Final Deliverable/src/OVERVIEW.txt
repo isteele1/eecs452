@@ -1,35 +1,29 @@
 Ultrasonic Anti-Spoofing Algorithm
 ==========================
-This file provides an overview of the source code files and details how they work together to make our code operational.
-
-///
-
 This project implements a real-time ultrasonic sensor spoofing and jamming detection system on an STM32 NUCLEO-L4R5ZI-P board. It uses two ultrasonic sensors: one as a "defender" (normal measurement), and one as an "attacker" (simulating spoofing/jamming attacks). The system applies advanced signal processing and statistical filtering to identify anomalies, and outputs both time- and frequency-domain data for monitoring or further analysis.
-
-///
 
 Files
 –––––––––––––––
 • plotting.py
-    - Takes in distance and STFT data from serial, plots it, and determines whether an attack happened based on distance and distance frequency data.
+    – Takes in distance and STFT data from serial, plots it, and determines whether an attack happened based on distance and distance frequency data.
 
 • main.cpp
-    - The main application file. It initializes all hardware peripherals, manages the measurement and attack cycles, processes sensor data, applies filtering and FFT analysis, and handles user interface (mode button and UART output). It is the central orchestrator that ties together all modules and logic.
+    – The main application file. It initializes all hardware peripherals, manages the measurement and attack cycles, processes sensor data, applies filtering and FFT analysis, and handles user interface (mode button and UART output). It is the central orchestrator that ties together all modules and logic.
 
 • main.h
-    - The main header file for the project. It provides essential includes, macro guards, and function prototypes for core application functions and error handling. It is included in main.cpp and other modules for hardware abstraction.
+    – The main header file for the project. It provides essential includes, macro guards, and function prototypes for core application functions and error handling. It is included in main.cpp and other modules for hardware abstraction.
 
 • stm32l4xx_it.h
-    - Declares interrupt handler prototypes for system exceptions and key peripherals (timers, RNG, external interrupts). This enables real-time response to sensor echo signals and user button presses.
+    – Declares interrupt handler prototypes for system exceptions and key peripherals (timers, RNG, external interrupts). This enables real-time response to sensor echo signals and user button presses.
 
 • stm32l4xx_hal_conf.h
-    - Configuration for the STM32 HAL, enabling required modules such as TIM, UART, RNG, GPIO, and DMA. It also sets the system clock and peripheral options, ensuring the hardware abstraction layer matches the needs of this project.
+    – Configuration for the STM32 HAL, enabling required modules such as TIM, UART, RNG, GPIO, and DMA. It also sets the system clock and peripheral options, ensuring the hardware abstraction layer matches the needs of this project.
 
 • HoltEMA-1.h / HoltEMA-1.cpp
-    - Implements the Holt Exponential Moving Average (EMA) filter class. This filter smooths and predicts the defender sensor's distance readings, reducing noise and providing a trend-corrected estimate. The filter is called from main.cpp for every new measurement.
+    – Implements the Holt Exponential Moving Average (EMA) filter class. This filter smooths and predicts the defender sensor's distance readings, reducing noise and providing a trend-corrected estimate. The filter is called from main.cpp for every new measurement.
 
 • kiss_fft.h / _kiss_fft_guts.h / kiss_fft.c
-    - The KISS FFT library, providing efficient routines for frequency-domain analysis. Used by main.cpp to perform short-time Fourier transforms (STFT) on the sensor data, enabling detection of jamming or spoofing patterns that manifest as spectral anomalies.
+    – The KISS FFT library, providing efficient routines for frequency-domain analysis. Used by main.cpp to perform short-time Fourier transforms (STFT) on the sensor data, enabling detection of jamming or spoofing patterns that manifest as spectral anomalies.
 
 Hardware Components
 –––––––––––––––
@@ -39,32 +33,23 @@ Hardware Components
 • Serial USB connection to a PC
 • PC running a Python script
 
-///
-
 How the Files Work Together
----------------------------
-- At startup, `main.cpp` initializes the STM32 hardware using the HAL configuration and GPIO/timer setup from `main.h` and `stm32l4xx_hal_conf.h`.
-- The defender sensor is triggered at regular intervals, and its echo time is measured using timers and interrupts (as declared in `stm32l4xx_it.h`).
-- The attacker sensor is controlled by the user via a mode button and can emit jamming or spoofing pulses at fixed or random intervals.
-- Each defender reading is processed through the HoltEMA filter (`HoltEMA-1.h/cpp`) for noise reduction and prediction.
-- A sliding window of recent measurements is analyzed using the KISS FFT library (`kiss_fft.h/guts.h/c`), producing a frequency-domain representation (STFT) to detect periodic or random interference.
-- Results (raw, filtered, and FFT data) are streamed over UART for visualization or logging.
-
-///
+–––––––––––––––
+– At startup, `main.cpp` initializes the STM32 hardware using the HAL configuration and GPIO/timer setup from `main.h` and `stm32l4xx_hal_conf.h`.
+– The defender sensor is triggered at regular intervals, and its echo time is measured using timers and interrupts (as declared in `stm32l4xx_it.h`).
+– The attacker sensor is controlled by the user via a mode button and can emit jamming or spoofing pulses at fixed or random intervals.
+– Each defender reading is processed through the HoltEMA filter (`HoltEMA-1.h/cpp`) for noise reduction and prediction.
+– A sliding window of recent measurements is analyzed using the KISS FFT library (`kiss_fft.h/guts.h/c`), producing a frequency-domain representation (STFT) to detect periodic or random interference.
+– Results (raw, filtered, and FFT data) are streamed over UART for visualization or logging.
 
 Operation
 –––––––––––––––
 Essentially, we have two parts of our code. The first is the processing on the STM32, which uses interrupts and timers to operate trigger and echo pulses on the two ultrasonic sensors. Trigger pulses are sent out at fixed intervals (set by default at 25 ms). Echo times are converted to distance with the speed of sound. The STM32 performs a Holt exponential moving average and STFT on this distance data. This output gets sent via USB to a connected PC to run the second part of our code. This is a single Python file which takes the data, plots it, and determines if an attack happened and what the attack might be by using unexpected patterns in distance and frequency characteristics.
 
-////
-
-- Measurement: The defender sensor periodically emits ultrasonic pulses and measures the time-of-flight (ToF) of the returning echo to compute distance.
-- Attack Simulation: The attacker sensor, controlled by the user, can emit ultrasonic pulses to interfere with the defender's readings, simulating real-world jamming or spoofing attacks.
-- Filtering: Each new distance measurement is processed with a HoltEMA filter, which adaptively smooths the data and predicts expected values based on recent trends, helping to distinguish genuine changes from noise or attack artifacts.
-- Spectral Analysis: A short-time Fourier transform (STFT) is applied to a buffer of recent measurements. This reveals the presence of periodic or random spectral energy, which is characteristic of jamming or spoofing attempts.
-- Output: Both time-domain (raw and filtered distance) and frequency-domain (FFT bins) data are output via UART for real-time monitoring or offline analysis.
+– Measurement: The defender sensor periodically emits ultrasonic pulses and measures the time-of-flight (ToF) of the returning echo to compute distance.
+– Attack Simulation: The attacker sensor, controlled by the user, can emit ultrasonic pulses to interfere with the defender's readings, simulating real-world jamming or spoofing attacks.
+– Filtering: Each new distance measurement is processed with a HoltEMA filter, which adaptively smooths the data and predicts expected values based on recent trends, helping to distinguish genuine changes from noise or attack artifacts.
+– Spectral Analysis: A short-time Fourier transform (STFT) is applied to a buffer of recent measurements. This reveals the presence of periodic or random spectral energy, which is characteristic of jamming or spoofing attempts.
+– Output: Both time-domain (raw and filtered distance) and frequency-domain (FFT bins) data are output via UART for real-time monitoring or offline analysis.
 
 This modular design allows for robust detection of ultrasonic spoofing and jamming, and can be extended with additional sensors or more advanced detection algorithms as needed.
-
-
-

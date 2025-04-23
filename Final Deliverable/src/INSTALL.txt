@@ -1,6 +1,77 @@
 Ultrasonic Anti-Spoofing Algorithm
 ==========================
-This file provides documentation on setup, compilation, and installation of the tools required in the project.
+This document explains how to compile, flash, and run the STM32 firmware, and how to set up the Python-based real-time plotting.
+
+Prerequisites
+–––––––––––––––
+Hardware:
+– NUCLEO-L4R5ZI-P development board
+– Two HC-SR04 ultrasonic sensors
+– Jumper wires
+– USB cable (Type-A to Micro-B)
+
+Software:
+– STM32CubeIDE (v1.5.0 or later)
+– ST-LINK USB driver (if not already installed)
+– Serial terminal program (e.g., Tera Term, PuTTY)
+– Python 3.x (for plotting)
+
+Project Files to Include
+–––––––––––––––
+Copy these files into your STM32CubeIDE project:
+– main.cpp
+– main.h
+– HoltEMA-1.h
+– HoltEMA-1.cpp
+– kiss_fft.h
+– kiss_fft_guts.h
+– kiss_fft.c
+– stm32l4xx_it.h
+– stm32l4xx_hal_conf.h
+Include any other STM32CubeIDE-generated files for your board as well.
+
+Project Setup in STM32CubeIDE
+–––––––––––––––
+– Create a new STM32 project targeting "NUCLEO-L4R5ZI-P".
+– Import all source and header files listed above into the project.
+– Open the .ioc file and configure:
+    - PC8, PC9, PC10, PC11 as GPIO for TRIG/ECHO (see USAGE.txt for mapping)
+    - PF5 as GPIO input with interrupt (mode button)
+    - LPUART1 at 115200 baud for UART output
+    - TIM1 and TIM2 for timing
+    - RNG for random spoofing intervals
+    - Enable HAL modules: TIM, UART, RNG, GPIO, DMA
+– Make sure your project is set to use C++17.
+
+Compiling and Flashing
+–––––––––––––––
+– Build the project in STM32CubeIDE.
+– Connect the NUCLEO board to your PC via USB.
+– Click "Debug" or "Run" in STM32CubeIDE to flash the firmware.
+– Open your serial terminal at 115200 baud, 8N1, and connect to the correct COM port.
+
+Hardware Wiring Summary Table
+–––––––––––––––
+**Function: NUCLEO Pin, Sensor Pin**
+Defender TRIG: PC10, TRIG
+Defender ECHO: PC11, ECHO
+Attacker TRIG: PC8, TRIG
+Attacker ECHO: PC9, ECHO
+Mode Button: PF5, (Button)
+UART TX/RX: LPUART1, (USB VCP)
+
+Running the Firmware
+–––––––––––––––
+– On reset, the defender sensor measures distance every 50 ms.
+– The attacker sensor can be idle, jamming, or spoofing (see USAGE.txt for mode control).
+– Data is streamed to UART for monitoring or plotting.
+
+Troubleshooting
+–––––––––––––––
+– No UART output? Check wiring, LPUART1 config, and baud rate.
+– No sensor readings? Confirm sensor wiring and 5V supply.
+– Button not working? Verify PF5 is properly connected and configured.
+– Python plot not updating? Confirm correct COM port and baud rate in `plotting.py`.
 
 Setting Up Python Plotting
 –––––––––––––––
@@ -12,118 +83,8 @@ Plug in the STM32 to your PC and find its COM port by running:
 
 Enter this port name into the top of plotting.py. Run the program in your Python IDE of choice.
 
-
-
-//////////
-
-
-
-This document explains how to compile, flash, and run the STM32 firmware, and how to set up the Python-based real-time plotting.
-
--------------------------------------------------
-1. Prerequisites
--------------------------------------------------
-Hardware:
-- NUCLEO-L4R5ZI-P development board
-- Two HC-SR04 ultrasonic sensors
-- Jumper wires
-- USB cable (Type-A to Micro-B)
-
-Software:
-- STM32CubeIDE (v1.5.0 or later)
-- ST-LINK USB driver (if not already installed)
-- Serial terminal program (e.g., Tera Term, PuTTY)
-- Python 3.x (for plotting, optional)
-
--------------------------------------------------
-2. Project Files to Include
--------------------------------------------------
-Copy these files into your STM32CubeIDE project:
-- main.cpp
-- main.h
-- HoltEMA-1.h
-- HoltEMA-1.cpp
-- kiss_fft.h
-- kiss_fft_guts.h
-- kiss_fft.c
-- stm32l4xx_it.h
-- stm32l4xx_hal_conf.h
-
-(Include any other STM32CubeIDE-generated files for your board.)
-
--------------------------------------------------
-3. Project Setup in STM32CubeIDE
--------------------------------------------------
-a. Create a new STM32 project targeting "NUCLEO-L4R5ZI-P".
-b. Import all source and header files listed above into the project.
-c. Open the .ioc file and configure:
-   - PC8, PC9, PC10, PC11 as GPIO for TRIG/ECHO (see USAGE.txt for mapping)
-   - PF5 as GPIO input with interrupt (mode button)
-   - LPUART1 at 115200 baud for UART output
-   - TIM1 and TIM2 for timing
-   - RNG for random spoofing intervals
-   - Enable HAL modules: TIM, UART, RNG, GPIO, DMA
-d. Make sure your project is set to use C++17.
-
--------------------------------------------------
-4. Compiling and Flashing
--------------------------------------------------
-a. Build the project in STM32CubeIDE.
-b. Connect the NUCLEO board to your PC via USB.
-c. Click "Debug" or "Run" in STM32CubeIDE to flash the firmware.
-d. Open your serial terminal at 115200 baud, 8N1, and connect to the correct COM port.
-
--------------------------------------------------
-5. Hardware Wiring Summary
--------------------------------------------------
-| Function         | NUCLEO Pin | Sensor Pin |
-|------------------|------------|------------|
-| Defender TRIG    | PC10       | TRIG       |
-| Defender ECHO    | PC11       | ECHO       |
-| Attacker TRIG    | PC8        | TRIG       |
-| Attacker ECHO    | PC9        | ECHO       |
-| Mode Button      | PF5        | (Button)   |
-| UART TX/RX       | LPUART1    | (USB VCP)  |
-
--------------------------------------------------
-6. Running the Firmware
--------------------------------------------------
-- On reset, the defender sensor measures distance every 50 ms.
-- The attacker sensor can be idle, jamming, or spoofing (see USAGE.txt for mode control).
-- Data is streamed to UART for monitoring or plotting.
-
--------------------------------------------------
-7. Setting Up Python Plotting
--------------------------------------------------
-To visualize data and FFT results in real time:
-
-a. Make sure Python 3.x is installed.
-
-b. Install dependencies:
-    -pip install pyserial matplotlib numpy
-
-c. Plug in the STM32 board and find its COM port:
-    - python3 -m serial.tools.list_ports
-  or check your OS device manager.
-
-d. Edit the top of `plotting.py` and set the correct port, e.g., PORT = 'COM3' # or your detected port
-
-e. Run the plotting script:
-  ./python3 plotting.py
-
-f. The script will display live plots of distance and FFT data.
-
--------------------------------------------------
-8. Troubleshooting
--------------------------------------------------
-- No UART output? Check wiring, LPUART1 config, and baud rate.
-- No sensor readings? Confirm sensor wiring and 5V supply.
-- Button not working? Verify PF5 is properly connected and configured.
-- Python plot not updating? Confirm correct COM port and baud rate in `plotting.py`.
-
--------------------------------------------------
-9. Notes
--------------------------------------------------
-- KISS FFT is included as source; no external FFT library is required.
-- The HoltEMA filter is implemented in C++ (ensure C++17 is enabled).
-- If using a different STM32 board, update pin assignments and peripheral initialization as needed.
+Notes
+–––––––––––––––
+– KISS FFT is included as source; no external FFT library is required.
+– The HoltEMA filter is implemented in C++ (ensure C++17 is enabled).
+– If using a different STM32 board, update pin assignments and peripheral initialization as needed.
