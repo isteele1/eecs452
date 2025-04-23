@@ -1,7 +1,6 @@
 Ultrasonic Anti-Spoofing Algorithm
 ==========================
 This is a comprehensive part list, covering our purchase orders and parts obtained in labs.
-** What information do we need to have in all of these besides price and links?**
 
 Lab Parts
 –––––––––––––––
