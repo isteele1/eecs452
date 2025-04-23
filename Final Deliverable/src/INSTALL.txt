@@ -2,101 +2,107 @@ Ultrasonic Anti-Spoofing Algorithm
 ==========================
 This file provides documentation on setup, compilation, and installation of the tools required in the project.
 
-Setting Up the STM32
-–––––––––––––––
-1. Prerequisites
-  • Software
-    - STM32CubeIDE (v1.15.0+)
-    - ST-LINK/V2 Drivers
-    - Some Serial Terminal (e.g ArduinoIDE, PuTTY, Tera Term)
-  • Hardware
-    - NUCLEO-L4R5ZI-P
-    - 2x HC-SR04 ultrasonic sensors
-    - 12 Jumper wires (10 Female-to-Male, 2 Male-to-Male)
-    - A breadboard
+Prerequisites
+-------------
+- **Hardware:**
+  - NUCLEO-L4R5ZI-P development board
+  - Two HC-SR04 ultrasonic sensors
+  - Jumper wires
+  - USB cable (Type-A to Micro-B)
 
-2. Project Setup in STM32CubeIDE
-  1) Create New Project
-    • File --> New --> STM32 Project
-    • Select "NUCLEO-L4R5ZI-P" from board selector
-    • Set project name (e.g., "Ultrasonic_Spoof_Detect")
-    • Select C++ as the Targeted Language
-  2) Import Source Files
-    • Right-click project --> Import --> General --> File System
-    • Add these files to Core/Inc folder
-      - HoltEMA.h
-      - kiss_fft.h
-      - _kiss_fft_guts.h
-      - stm32l4xx_it.h
-      - stm32l4xx_hal_conf.h
-    • Add these files to Core/Src folder
-      - HOLTEMA.cpp
-      - stm32l4xx_hal_msp.c
-      - stm32l4xx_it.c
-      - syscalls.c
-      - sysmem.c
-3) Configure Target MCU
-  • In the .ioc file
-    - Clock: 120MHz
-    - GPIO: PC8: GPIO_OUTPUT
-            PC9: GPIO_INPUT
-            PC10: GPIO_OUTPUT
-            PC11: GPIO_INPUT
-            PF5: GPIO_EXTI5
-    - LPUART1: 115200, 8N1
+- **Software:**
+  - STM32CubeIDE (v1.5.0 or later) [Download from STMicroelectronics]
+  - ST-LINK USB driver (if not already installed)
+  - Serial terminal program (e.g., Tera Term, PuTTY)
 
-3. Hardware Connections
-  • Attacker ultrasonic sensor
-    - Trig of Attacker --> PC8
-    - Echo of Attack --> PC9
-  • Defender ultrasonic sensor
-    - Trig of Attacker --> PC10
-    - Echo of Attack --> PC11
-  • External Button
-    - One terminal --> GND
-    - Other terminal --> PF5
+Project Files
+-------------
+Copy the following files into your STM32CubeIDE project directory:
+- main.cpp
+- main.h
+- HoltEMA-1.h
+- HoltEMA-1.cpp
+- kiss_fft.h
+- kiss_fft_guts.h
+- kiss_fft.c
+- stm32l4xx_it.h
+- stm32l4xx_hal_conf.h
 
-4. Code Configuration
-  • Critical Settings in main.cpp (Ensure these match your hardware)
-    #define TRIG_PIN_ATTACK GPIO_PIN_8
-    #define ECHO_PIN_ATTACK GPIO_PIN_9
-    #define TRIG_PIN_DEFEND GPIO_PIN_10
-    #define ECHO_PIN_DEFEND GPIO_PIN_11
-  • Build Settings
-    -  Project --> Properties --> C/C++ Build --> Settings
-      • Toolchain: STM32 MCU GCC
-      • Preprocessor __GNUC__, USE_HAL_DRIVER
-      • Miscellaneous: -std=c++17
+(Include any other STM32CubeIDE-generated files for your target board.)
 
-5. Flashing the Firmware
-  1) Connect board via USB
-  2 In STM32CubeIDE
-    • Project --> Build All
-    • Run --> Debug Configuration --> STM32 Cortex-M C/C++ Application
-    • Click "Debug"
+Project Setup
+-------------
+1. **Create a New Project in STM32CubeIDE:**
+   - Go to `File > New > STM32 Project`
+   - Select "NUCLEO-L4R5ZI-P" as the target board
+   - Choose "Empty" project type and click "Finish"
 
-6. Serial Monitoring
-  1) Open Serial terminal (115200 baud, 8N1)
-  2) Expected output:
-      15.23 14.98   // Raw and filtered distances
-      0.12 0.45 ...  // FFT bins
+2. **Add Source Files:**
+   - Right-click the project in Project Explorer
+   - Select `Import > General > File System`
+   - Import all files listed above into the `Src` and `Inc` directories as appropriate
 
-7. Attack Mode Control
-  • Press the button connected to PF5 to cycle mode
-    - Disable attacks --> Jamming (25ms intervals) --> Random (25 - 150ms intervals) --> Disable attacks
+3. **Configure Pins and Peripherals:**
+   - Open the `.ioc` file in STM32CubeIDE
+   - Set up:
+     - PC8, PC9, PC10, PC11 as GPIO (for TRIG/ECHO)
+     - PF5 as GPIO input with interrupt (for mode button)
+     - LPUART1 and USART1 at 115200 baud (for UART output)
+     - TIM1 and TIM2 for precise timing
+     - RNG for random spoofing intervals
+   - Enable required HAL modules in `stm32l4xx_hal_conf.h` (TIM, UART, RNG, GPIO, DMA)
+
+4. **Check Build Settings:**
+   - Ensure C++17 is enabled in project properties
+   - Add `USE_HAL_DRIVER` and `__GNUC__` to preprocessor symbols if not present
+
+Compiling and Flashing
+----------------------
+1. **Build the Project:**
+   - Click the "Build" (hammer) icon in STM32CubeIDE
+   - Resolve any errors or missing includes
+
+2. **Connect the Board:**
+   - Plug the NUCLEO board into your computer via USB (CN1)
+   - Ensure the board powers up (PWR LED on)
+
+3. **Flash the Firmware:**
+   - Click the "Debug" or "Run" button in STM32CubeIDE
+   - The IDE will program the board using the on-board ST-LINK
+
+4. **Monitor Serial Output:**
+   - Open your serial terminal and connect to the correct COM port at 115200 baud, 8N1
+   - You should see distance measurements and FFT data streaming every 50 ms
+
+Wiring Summary
+--------------
+| Function         | NUCLEO Pin | Sensor Pin |
+|------------------|------------|------------|
+| Defender TRIG    | PC10       | TRIG       |
+| Defender ECHO    | PC11       | ECHO       |
+| Attacker TRIG    | PC8        | TRIG       |
+| Attacker ECHO    | PC9        | ECHO       |
+| Mode Button      | PF5        | (Button)   |
+| UART TX/RX       | LPUART1    | (USB VCP)  |
+
+Notes and Special Requirements
+------------------------------
+- **KISS FFT:** The project uses the open-source KISS FFT library for spectral analysis. No special installation is needed; the provided `.c` and `.h` files are included in the build.
+- **HoltEMA:** Filtering is implemented in C++ (HoltEMA-1.h/cpp). Ensure your project is configured for C++ compilation.
+- **No external libraries** beyond STM32 HAL, KISS FFT, and standard C++ are required.
+- **If using a different STM32 board:** Update the pin assignments and peripheral initializations in the `.ioc` file and code as needed.
 
 Troubleshooting
-• Issue: No serial output
-  - Solution: Check LPUART1 config and TX/RX connections. Also consider restarting your serial monitor and the STM32
-• Issue: Sensor not responding
-  - Solution: Verify 5V power and trigger/echo wiring
-• Issue: FFT artifacts
-  - Solution: Adjust N and L in main.cpp
+---------------
+- If the board is not detected, install or update the ST-LINK USB driver.
+- If you see no UART output, check wiring and ensure LPUART1 is correctly configured.
+- For build errors, verify all source/header files are present and included in the project.
 
-Documentation References
-• NUCLEO-L4R5ZI-P User Manual (https://www.st.com/resource/en/user_manual/um2179-stm32-nucleo144-boards-mb1312-stmicroelectronics.pdf)
-• STM32CubeIDE Debugging Guide (https://01001000.xyz/2020-05-11-Tutorial-STM32CubeIDE-Getting-started/)
-• kissfft repository by mborgerding (https://github.com/mborgerding/kissfft)
+References
+----------
+- STM32CubeIDE User Guide
+- NUCLEO-L4R5ZI-P User Manual (UM2179)
+- STM32 HAL documentation
 
 
 Setting Up Python Plotting
