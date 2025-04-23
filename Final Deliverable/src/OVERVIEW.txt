@@ -4,8 +4,29 @@ This file provides an overview of the source code files and details how they wor
 
 Files
 –––––––––––––––
-– plotting.py: Takes in distance and STFT data from serial, plots it, and determines whether an attack happened based on distance and distance frequency data
-TODO: add the rest of the files. Explain any necessary additional steps in this area and below.
+– plotting.py: Takes in distance and STFT data from serial, plots it, and determines whether an attack happened based on distance and distance frequency data.
+
+### STM32 Files ###
+
+## Core Application Files ##
+- main.h/cpp: The central application file initializes the ultrasonic sensors (defender and attacker), manages attack modes (jamming/random spoofing), and integrates HoltEMA filtering and FFT analysis for spoofing detection. Debug output is sent via UART.
+- stm32l4xx_it.h/c: Handles critical interrupts, including timer-based sensor measurements (TIM2_IRQHandler), random spoofing timing (RNG_IRQHandler), and button presses to switch attack modes (EXTI9_5_IRQHandler).
+
+## Signal Processing ##
+- HoltEMA.h/cpp: Implements a double exponential smoothing filter to clean ultrasonic sensor data. The spin_once() method updates level/trend estimates, while predict() helps detect anomalies from spoofed signals.
+- kiss_fft.h/c + _kiss_fft_guts.h: A lightweight FFT library for frequency analysis. Detects spoofing by identifying abnormal spectral patterns in sensor data. Configured for floating-point precision.
+
+## Hardware Configuration ##
+- stm32l4xx_hal_conf.h: Enables essential peripherals: timers (sensor control), RNG (random spoofing), UART (debugging), and GPIO (sensor/button interfacing). Clock settings (e.g., 8MHz HSE) ensure accurate timing.
+- stm32l4xx_hal_msp.c: Initializes MCU hardware, including GPIO pins for sensors, DMA for efficient data transfers, and clock configurations. Called automatically by the HAL.
+
+## System & Utilies ##
+- system_stm32l4xx.c: Configures the MCU’s core clock tree and flash latency, ensuring stable operation at 120MHz for real-time processing.
+- syscalls.c + sysmem.c: Provides low-level C library support, enabling heap management (malloc) and debug output (printf over UART). Critical for logging spoofing events.
+
+    
+
+
 
 Hardware Components
 –––––––––––––––
