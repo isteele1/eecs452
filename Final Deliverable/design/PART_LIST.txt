@@ -6,13 +6,15 @@ This is a comprehensive part list, covering our purchase orders and parts obtain
 Lab Parts
 –––––––––––––––
 – 2x HC-SR04 Ultrasonic Sensor
-– 2x Breadboard
-– Wires
+– 1x NUCLEO-L4R5ZI-P
+- 1x Adafruit Tactile Button
+– 1x Breadboard
+– 12x jumper wires (10 Female-to-Male, 2 Male-to-Male)
 – USB-A to Micro-USB cable
+
 
 Purchased Parts
 –––––––––––––––
-– 1x STM32 (what kind?)
 – Wood Pieces from Home Depot (link)
 – Wood screws
-– Junction Box from Home Depot (unless Jack is tanking that one)
+– 6" x 6" x 4" Junction Box from Home Depot (https://www.homedepot.com/p/Carlon-6-in-x-6-in-x-4-in-Gray-PVC-Junction-Box-E987R-3-HD-E987R-3-HD/100404096)
