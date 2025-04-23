@@ -92,7 +92,7 @@ Operation Overview
 
 Troubleshooting
 ---------------
-| Symptom               | Solution                                  |
+| Symptom               | Solution                                 |
 |-----------------------|------------------------------------------|
 | No Python plots       | Check COM port and baud rate (115200)    |
 | Gaps in data          | Reduce N/L values or increase sampling   |
