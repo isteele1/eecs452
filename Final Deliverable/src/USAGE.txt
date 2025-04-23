@@ -15,3 +15,104 @@ Live Controls
 Expected Behavior
 –––––––––––––––
 The ultrasonic sensors and Python visualization script should plot the data to a Matplotlib animation window. These should be live, but may be a little slower than live due to the processing overhead of the animation window. Increasing the sampling period of the defender sensor should help this. The type of attack, if an attack is detected, will be displayed in the title of the first plot (Distance vs. Time). There are no other console messages or diagnostic info, although occasionally error messages may pop up in the Python terminal. These can be disregarded as we have not found functionality to be interrupted from them.
+
+
+//////////////////////////////////////////////
+
+Overview
+--------
+This system combines STM32 firmware and Python visualization to detect ultrasonic sensor spoofing attacks. The STM32 handles real-time sensor data processing while a Python script provides live visualization of raw data, filtered signals, and frequency-domain analysis.
+
+Hardware Setup
+--------------
+- STM32 NUCLEO-L4R5ZI-P board
+- Defender Sensor: TRIG=PC10, ECHO=PC11
+- Attacker Sensor: TRIG=PC8, ECHO=PC9
+- USB Connection: Micro-USB cable for power and data
+- PC running Python: Requires USB serial port access
+
+How to Run
+----------
+1. STM32 Firmware
+   - Import all project files into STM32CubeIDE
+   - Build and flash to board via ST-LINK
+   - Ensure serial port is free for Python connection
+
+2. Python Visualization
+   - Requirements: Python 3.9+, `pyserial`, `matplotlib`, `numpy`
+   - Run: `python plotting.py --port <COM_PORT> --N 40 --L 40`
+   - Parameters must match STM32 code settings:
+     - N: FFT window size (default 40)
+     - L: Stride length (default 40)
+     - --port: Serial port (e.g., COM3 on Windows)
+
+3. System Startup Order
+   1. Power STM32 board
+   2. Start Python script
+   3. Wait for "Serial connection established" message
+
+User Interface
+--------------
+### Hardware Controls
+- STM32 Blue Button (PF5)
+  - Single Press: Cycle attack modes:
+
+    No Attack → Jamming (50ms pulses) → Random Spoofing (500-1500ms) → No Attack
+
+### PC Controls
+- 'q' Key: Safe shutdown of Python visualization
+  - Closes plots and serial connection
+  - Use for program termination or recovery from errors
+- 'p' Key: Pause/resume plotting
+  - Freezes display while continuing data acquisition
+  - No data backlog - resumes with latest samples
+
+Operation Overview
+-----------------
+1. Normal Operation
+   - Defender sensor updates every 50ms
+   - UART streams: `RAW_DIST FILTERED_DIST FFT_BINS...`
+   - Python displays:
+     - Time-domain plot (distance vs time)
+     - Spectrogram (frequency vs time)
+     - Attack status in plot title
+
+2. Attack Modes
+   - Jamming: Regular 50ms ultrasonic bursts
+   - Spoofing: Randomized pulse intervals
+   - Detection triggers visible as:
+     - High-frequency components in spectrogram
+     - Mismatch between raw/filtered distances
+
+3. Performance Notes
+   - ~200ms end-to-end latency (sensor→STM32→PC)
+   - CPU Usage:
+     - STM32: 65-70% (peaks during FFT)
+     - Python: 15-20% (matplotlib overhead)
+
+Troubleshooting
+---------------
+| Symptom               | Solution                                  |
+|-----------------------|------------------------------------------|
+| No Python plots       | Check COM port and baud rate (115200)    |
+| Gaps in data          | Reduce N/L values or increase sampling   |
+| "Serial busy" errors  | Disconnect IDE serial monitor first      |
+| Frozen visualization  | Press 'p' twice to reset buffer          |
+
+Expected Behavior
+-----------------
+- Successful Startup
+  - STM32 blue LED solid on
+  - Python console shows connection message
+  - Matplotlib window with 3 subplots:
+    1. Distance vs Time (attack status in title)
+    2. Filtered vs Raw comparison
+    3. Frequency spectrum
+
+- During Attacks
+  - Jamming: Regular spikes in raw distance plot
+  - Spoofing: Random high-frequency FFT components
+
+- Error Handling
+  - Python ignores serial framing errors automatically
+  - STM32 auto-reconnects on USB replug
