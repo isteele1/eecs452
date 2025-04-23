@@ -100,9 +100,9 @@ Troubleshooting
 
 References
 ----------
-- STM32CubeIDE User Guide
-- NUCLEO-L4R5ZI-P User Manual (UM2179)
-- STM32 HAL documentation
+- STM32CubeIDE User Guide (https://wiki.st.com/stm32mcu/wiki/STM32CubeIDE:Introduction_to_STM32CubeIDE)
+- NUCLEO-L4R5ZI-P User Manual (https://www.st.com/resource/en/user_manual/um2179-stm32-nucleo144-boards-mb1312-stmicroelectronics.pdf)
+- HC-SR04 Datasheet (https://cdn.sparkfun.com/datasheets/Sensors/Proximity/HCSR04.pdf)
 
 
 Setting Up Python Plotting
