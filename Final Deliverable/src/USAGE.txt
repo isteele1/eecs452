@@ -40,7 +40,7 @@ How to Run
 
 2. Python Visualization
    - Requirements: Python 3.9+, `pyserial`, `matplotlib`, `numpy`
-   - Run: `python plotting.py --port <COM_PORT> --N 40 --L 40`
+   - Run: `python plotting.py --port <COM_PORT>
    - Parameters must match STM32 code settings:
      - N: FFT window size (default 40)
      - L: Stride length (default 40)
