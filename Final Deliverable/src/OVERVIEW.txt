@@ -4,37 +4,61 @@ This file provides an overview of the source code files and details how they wor
 
 Files
 –––––––––––––––
-– plotting.py: Takes in distance and STFT data from serial, plots it, and determines whether an attack happened based on distance and distance frequency data.
+- plotting.py: Takes in distance and STFT data from serial, plots it, and determines whether an attack happened based on distance and distance frequency data.
 
-### STM32 Files ###
+STM32CubeIDE Files
 
 ## Core Application Files ##
-- main.h/cpp: The central application file initializes the ultrasonic sensors (defender and attacker), manages attack modes (jamming/random spoofing), and integrates HoltEMA filtering and FFT analysis for spoofing detection. Debug output is sent via UART.
-- stm32l4xx_it.h/c: Handles critical interrupts, including timer-based sensor measurements (TIM2_IRQHandler), random spoofing timing (RNG_IRQHandler), and button presses to switch attack modes (EXTI9_5_IRQHandler).
+• main.h/cpp: The central application file initializes the ultrasonic sensors (defender and attacker), manages attack modes (jamming/random spoofing), and integrates HoltEMA filtering and FFT analysis for spoofing detection. Debug output is sent via UART.
+• stm32l4xx_it.h/c: Handles critical interrupts, including timer-based sensor measurements (TIM2_IRQHandler), random spoofing timing (RNG_IRQHandler), and button presses to switch attack modes (EXTI9_5_IRQHandler).
 
 ## Signal Processing ##
-- HoltEMA.h/cpp: Implements a double exponential smoothing filter to clean ultrasonic sensor data. The spin_once() method updates level/trend estimates, while predict() helps detect anomalies from spoofed signals.
-- kiss_fft.h/c + _kiss_fft_guts.h: A lightweight FFT library for frequency analysis. Detects spoofing by identifying abnormal spectral patterns in sensor data. Configured for floating-point precision.
+• HoltEMA.h/cpp: Implements a double exponential smoothing filter to clean ultrasonic sensor data. The spin_once() method updates level/trend estimates, while predict() helps detect anomalies from spoofed signals.
+• kiss_fft.h/c + _kiss_fft_guts.h: A lightweight FFT library for frequency analysis. Detects spoofing by identifying abnormal spectral patterns in sensor data. Configured for floating-point precision.
 
 ## Hardware Configuration ##
-- stm32l4xx_hal_conf.h: Enables essential peripherals: timers (sensor control), RNG (random spoofing), UART (debugging), and GPIO (sensor/button interfacing). Clock settings (e.g., 8MHz HSE) ensure accurate timing.
-- stm32l4xx_hal_msp.c: Initializes MCU hardware, including GPIO pins for sensors, DMA for efficient data transfers, and clock configurations. Called automatically by the HAL.
+• stm32l4xx_hal_conf.h: Enables essential peripherals: timers (sensor control), RNG (random spoofing), UART (debugging), and GPIO (sensor/button interfacing). Clock settings (e.g., 8MHz HSE) ensure accurate timing.
+• stm32l4xx_hal_msp.c: Initializes MCU hardware, including GPIO pins for sensors, DMA for efficient data transfers, and clock configurations. Called automatically by the HAL.
 
 ## System & Utilies ##
-- system_stm32l4xx.c: Configures the MCU’s core clock tree and flash latency, ensuring stable operation at 120MHz for real-time processing.
-- syscalls.c + sysmem.c: Provides low-level C library support, enabling heap management (malloc) and debug output (printf over UART). Critical for logging spoofing events.
-
-    
-
-
+• system_stm32l4xx.c: Configures the MCU’s core clock tree and flash latency, ensuring stable operation at 120MHz for real-time processing.
+• syscalls.c + sysmem.c: Provides low-level C library support, enabling heap management (malloc) and debug output (printf over UART). Critical for logging spoofing events.
 
 Hardware Components
 –––––––––––––––
-– STM32 microcontroller
-– 2x Ultrasonic Sensors (HC-SR04)
-– Serial USB connection to a PC
-– PC running a Python script
+• STM32 microcontroller
+• 2x Ultrasonic Sensors (HC-SR04)
+• Tactile Button
+• Serial USB connection to a PC
+• PC running a Python script
 
 Operation
 –––––––––––––––
 Essentially, we have two parts of our code. The first is the processing on the STM32, which uses interrupts and timers to operate trigger and echo pulses on the two ultrasonic sensors. Trigger pulses are sent out at fixed intervals (set by default at 25 ms). Echo times are converted to distance with the speed of sound. The STM32 performs a Holt exponential moving average and STFT on this distance data. This output gets sent via USB to a connected PC to run the second part of our code. This is a single Python file which takes the data, plots it, and determines if an attack happened and what the attack might be by using unexpected patterns in distance and frequency characteristics.
+
+#### STM32 Embedded Processing ###
+
+Sensor Timing
+    • Uses TIM1 (prescaled to 119, 16-bit counter) for precise 10us trigger pulses
+    • Samples defender sensor every 25ms (adjustable via last_stft_time check)
+    • Attacker sensor jams at either:
+        - Fixed 25ms intervals (JAMMING Mode)
+        - Random 25-150ms intervals (RANDOM Mode)
+
+Signal Processing Pipeline
+    • Distance Measurement
+        - Converts echo pulse width (TIM1 counter) to cm using 0.0343/2 cm/µs
+        - Implements 200ms timeout for echo detection
+    • HoltEMA Filtering
+        - Configured with tau_l=0.2 (level), tau_m=10 (trend)
+        - Processes raw distances via spin_once() + predict()
+    • STFT Analysis
+        - 40-point Hamming window (N=40) with 40-sample stride (L=40)
+        - kiss_fft processes 10-second buffer (LIST_LENGTH=2000)
+        - Outputs log-magnitude spectrum (0-20Hz range)
+
+Data Transmission
+    • Sends via LPUART1 (115200 baud) in structured format:
+            RawDistance FilteredDistance FFTBin1 FFTBin2...FFTBin20
+    • Uses printf redirection to UART (__io_putchar)
+
