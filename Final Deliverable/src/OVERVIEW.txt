@@ -47,7 +47,7 @@ Sensor Timing
 
 Signal Processing Pipeline
     • Distance Measurement
-        - Converts echo pulse width (TIM1 counter) to cm using 0.0343/2 cm/µs
+        - Converts echo pulse width (TIM1 counter) to cm using 0.0343/2 cm/us
         - Implements 200ms timeout for echo detection
     • HoltEMA Filtering
         - Configured with tau_l=0.2 (level), tau_m=10 (trend)
@@ -61,4 +61,24 @@ Data Transmission
     • Sends via LPUART1 (115200 baud) in structured format:
             RawDistance FilteredDistance FFTBin1 FFTBin2...FFTBin20
     • Uses printf redirection to UART (__io_putchar)
+
+
+### Python Analysis ###
+
+Real Time Visualization
+    • Figure 1: Raw vs filtered distance (10s window)
+    • Figure 2: Spectrogram (0-25Hz range)
+    • Figure 3: Total spectral power
+
+Attack Detection
+    • Jamming Detection
+        - Distance drop > 8cm (jam_drop_threshold)
+        - Low variance (< 0.5cm^2) in detection window
+    • Spoofing Detection
+        - High variance (> 12cm^2) in distances
+        - Spectral power > 400 units (Cooldown: 2.4s between attack state changes)
+
+Controls
+    • 'p' to pause/unpause plotting
+    • 'q' to quit program  
 
