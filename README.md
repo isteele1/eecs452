@@ -14,7 +14,7 @@ This repository contains the following components:
 
 This repository contains the following folders:
 
-- **data**: Miscellaneous data files that were used to support our final report. This includes raw data and processed datasets crucial for our project's analysis.
+- **videos**: Videos used during our expo demonstration. These videos are meant to illustrate key aspects and functionalities of the project.
 - **design**: CAD files, design files, pictures of construction of our designs at various stages, and a part list containing sources and specs of all purchase orders made during the semester.
 - **src**: All project source code files with documentation at the top of each. Also included is an overview of our source code files, guidelines on how to use our software, how it all works together, and the underlying theory of its operation. Finally, there is a file which contains information on how to compile and execute the code, including the components run on the STM32 IDE software.
 
